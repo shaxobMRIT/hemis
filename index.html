@@ -1,0 +1,2754 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>Savollarni belgilash tizimi</title>
+
+<style>
+:root {
+  --blue-main: #0d6efd;
+  --blue-light: #e7f1ff;
+  --blue-dark: #084298;
+  --bg: #f1f5f9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  margin: 0;
+  padding: 0;
+  color: #212529;
+}
+
+header {
+  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  color: white;
+  padding: 25px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(13,110,253,0.15);
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  color: var(--blue-dark);
+  margin-top: 0;
+}
+
+textarea {
+  width: 100%;
+  height: 180px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #cfe2ff;
+  font-size: 14px;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--blue-main);
+  box-shadow: 0 0 0 2px rgba(13,110,253,0.2);
+}
+
+button {
+  background: var(--blue-main);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: var(--blue-dark);
+}
+
+.test {
+  background: var(--blue-light);
+  border-left: 6px solid var(--blue-main);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.question {
+  font-weight: bold;
+  color: var(--blue-dark);
+  margin-bottom: 8px;
+}
+
+.answer {
+  margin-left: 20px;
+  margin-top: 5px;
+  padding: 4px 8px;
+  border-radius: 5px;
+}
+
+.correct {
+  background: #d1e7dd;
+  color: #0f5132;
+  font-weight: bold;
+}
+
+footer {
+  text-align: center;
+  padding: 15px;
+  color: #6c757d;
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  Savollarni avtomatik belgilash tizimi
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Qidiriladigan 50 ta savol</h2>
+    <p>Har bir savolni <b>yangi qatorda</b> yozing</p>
+    <textarea id="searchQuestions" placeholder="Masalan:
+Mobil ilova atamasi
+Emulyator qanday dastur?
+..."></textarea>
+    <button onclick="findQuestions()">Savollarni belgilash</button>
+  </div>
+
+  <div class="card">
+    <h2>Natija</h2>
+    <div id="results"></div>
+  </div>
+
+</div>
+
+<footer>
+  © Savol–javob tizimi | HTML · CSS · JS
+</footer>
+
+<script>
+// 🔵 ASOSIY TEST BAZASI
+const testText = `
++++++
++++++
+
+"Mobil ilova" atamasi qanday ilovalarga nisbatan ishlatiladi?
+====
+#Mobil platformalarda ishlovchi ilovalar
+====
+Desktop interfeysda ishlovchi ilovalar
+====
+Linux OT da ishlovchi ilovalar
+====
+Web interfeysda ishlovchi ilovalar
+
++++++
+
+Emulyator qanday dastur?
+====
+#Bir OT uchun yozilgan dasturni boshqa OT da ishlashini ta'minlovchi dastur
+====
+Yozilgan kodni interpretatsiya qilib beruvchi dastur
+====
+Bir dasturlash tilida yozilgan kodni boshqa tilga konvertatsiya qiluvchi dastur
+====
+Yozilgan kodni kompilyatsiya qilib beruvchi dastur
+
++++++
+
+Play Store nima?	
+====
+#Android telefonlari uchun mo‘ljallangan mobil ilovalar do‘koni
+====
+Foydalanuvchilarga iTunes do‘konidan turli xil mobil ilovalarni ko‘rib chiqish va yuklab olish imkoniyatini beruvchi xizmat
+====
+App Store-dan bepul yoki pullik dasturlarni yuklash servisi
+====
+Mobil ilovalar ishlab chiqish uchun onlayn platforma
+
+
+
++++++
+
+
+
+App Store haqida to‘g‘ri ta’rifni belgilang?
+====
+#iOS foydalanuvchilari uchun mobil ilovalar do‘koni
+====
+Android telefonlari uchun mo‘ljallangan platforma
+====
+Onlayn kodlar generatori
+====
+iOS uchun havfsizlikka javobgar tizim
+
+
+
++++++
+
+
+
+Androidga to‘g‘ri ta’rif berilgan qatorni belgilan
+====
+#Linux yadrosida ko‘tarilgan mobil OT //Kernell
+====
+Apple qurilmalari uchun yaratilgan mobil OT
+====
+Windows OT negizida yaratilgan mobil OT
+====
+Java Development Kit dasturiy vositalari to‘plami komponentasi
+
+
+
++++++
+
+Quyidagilardan mobil dasturlash til va freymvorklarini belgilang
+====
+#Kivy, Flutter, React Native
+====
+Java, PHP, SQL
+====
+Flask, Spring, Kivy
+====
+React JS, Node JS, C#
+
+
++++++
+
+Flutter freymvorki qaysi dasturlash tiliga tegishli
+====
+#Dart
+====
+Python
+====
+Java
+====
+C#
+
+
++++++
+
+
+
+Table (yoki DataTable) komponentasi nima uchun ishlatiladi?
+====
+#Ma’lumotlarni jadval ko‘rinishida ekranga chiqarish uchun
+====
+Rasmlarni joylashtirish uchun
+====
+Material dizayn kutubxonasini chaqirish uchun
+====
+Audio ma’lumotlarni joylashtirish uchun
+
+
+
++++++
+
+
+
+Quyidagilardan faqat mobil OT lar ko‘rsatilgan qatorni belgilang
+====
+#Android, iOS, Symbian, Windows mobile
+====
+Django, Kivy, Windows, Debian
+====
+MacOS, Windows, Symbian, Linux
+====
+Flutter, Windows, Android, iOS
+
+
++++++
+
+
+
+Mobil ilovalar dizaynini ishlab chiqishda quyidagi grafik muharrirlarning qaysi biridan ko‘proq foydalaniladi?
+====
+#Figma
+====
+Adobe Photoshop
+====
+Corel Draw
+====
+Paint
+
+
++++++
+
+
+
+====
+#Mobil ilovalar dizaynini ishlab chiqishda UX tushunchasi nimani ifodalaydi?
+====
+Foydalanuvchi tajribasi
+====
+Foydalanuvchi interfeysi
+====
+Moslashuvchan dizayn
+====
+Adaptiv interfeys
+
+
++++++
+
+
+Grafik interfeys bu
+====
+#Foydalanuvchining grafik interfeysi
+====
+Operatsion tizim. Qurilmadagi eng muhim dastur
+====
+Ichki rivojlanish muhiti
+====
+Android dastur kodi fayli to‘plangan
+
+
++++++
+
+
+
+Kivy freymvorki qaysi dasturlash tiliga tegishli?
+====
+#Python
+====
+PHP
+====
+Ruby
+====
+Pascal
+
+
++++++
+
+
+
+Boshqa klassdan voris olish uchun (Dart, Java) qaysi kalitso‘z ishlatiladi?
+====
+#extends
+====
+runApp
+====
+main
+====
+return
+
+
++++++
+
+
+
+Galereya ko‘rinishi nima?
+====
+#Ekranda rasmlarni (rasmlarni) navbati bilan ko‘rsatish uchun foydalaniladi
+====
+tarkibiy qismlarni bir-biriga ulash uchun ishlatiladi
+====
+bu dasturning qo‘shimcha xususiyatlarini ochib beradigan menyu
+====
+Joriy faoliyatda operatsiyalarni bajarish uchun zarur bo‘lgan buyruqlarni tushuntiradi
+
+
++++++
+
+
+
+Android operatsion tizimi qaysi IT gigant tomonidan qo‘llab-quvvatlab kelinadi?
+====
+#Google
+====
+Facebook
+====
+Microsoft
+====
+Apple
+
+
++++++
+
+
+
+Genymotion, BlueStacks qanday vazifani bajaruvchi dasturlar?
+====
+#emulyator
+====
+kompilyator
+====
+kod muharriri
+====
+grafik muharrir
+
+
+
++++++
+
+
+
+SQLite qanday dastur hisoblanadi?
+====
+#Ma’lumotlar bazasini boshqarish tizimi
+====
+Freymvork
+====
+Grafik muharrir
+====
+Emulyator
+
+
+
++++++
+
+
+
+Mobil operatsion tizimlar deganda nimani tushunasiz?
+====
+#bu mobil qurilmalarni boshqarish uchun mo‘ljallangan tizimlar (smartfonlar, planshetlar, PDA va boshqa mobil qurilmalar)
+====
+bu mobil qurilmalar uchun mo‘ljallangan turli xil ilovalar va xizmatlarni o‘z ichiga olgan onlayn xizmatlar
+====
+u Android tizimining yadrosi bo‘lib, 115 ta moduldan iborat
+====
+ilovalarni boshqarish uchun zarur bo‘lgan kutubxonalar to‘plami
+
+
++++++
+
+
+
+Android Studioda yozilgan kodni natijasi (build) ni qanday ko‘rish mumkin?
+====
+#Barcha javoblar to‘g‘ri
+====
+AVD manager orqali o‘rnatilgan virtual qurilmada
+====
+Emulyator dasturlarida
+====
+USB bilan telefonda
+
+
+
++++++
+
+
+
+Sozlamalar bu – …
+====
+#qurilma ma'lumotlarini sozlamalar va parametrlarda saqlash
+====
+media fayllarini audio, video va rasm sifatida saqlash
+====
+aloqa ma'lumotlarini saqlash
+====
+ma'lumotlar "o‘tkazib yuborilgan qo‘ng‘iroqlar", "qo‘ng‘iroq tafsilotlari" va boshqalar
+
+
+
++++++
+
+
+
+Ma'lumotlar manzili (path) nima uchun ishlatiladi?
+====
+#Chaqirilgan resursning local/global adresini ko‘rsatish uchun
+====
+Video formatini sozlash uchun
+====
+Fayl toifasini haqida xabar berish uchun
+====
+Ekran o‘lchamiga moslashish uchun
+
+
+
++++++
+
+
+
+Bir nechta variantni birgalikda tanlash maqsadida ishlatiladigan komponenta qaysi?
+====
+#Checkbox
+====
+Button
+====
+Text
+====
+DatePicker
+
+
++++++
+
+
+iOS platformasini qaysi kompaniya qo‘llab-quvvatlab, rivojlantirib boradi?
+====
+#Apple
+====
+Microsoft
+====
+Facebook
+====
+Tesla
+
+
++++++
+
+
+Quyidagi tillardan qaysi birida mobil ilovalar ishlab chiqish imkoni mavjud emas?
+====
+#PHP
+====
+Java
+====
+Javascript
+====
+Python
+
+
++++++
+
+
+Android Studioda tayyor bo‘lgan kodni biron qurilmada ishga tushirish (build) uchun qaysi buyruq bosiladi?
+====
+#Run (Shift + F10)
+====
+Open (Ctrl + O)
+====
+Debug (Shift + F9)
+====
+Save (Ctrl + S)
+
+
++++++
+
+
+Microsoft kompaniyasining mobil qurilmalar uchun yaratgan mobil operatsion tizimi qaysi?
+====
+#Windows Phone
+====
+Windows 10
+====
+Windows XP
+====
+Windows Vista
+
+
++++++
+
+
+Android Studioda yozilgan kodni qaysi brauzerlar orqali build qilib ko‘rish mumkin?
+====
+#Barcha javoblar to‘g‘ri
+====
+Chrome, Opera
+====
+Chrome, Mozilla Firefox
+====
+Yandex Browser, Opera
+
+
++++++
+
+
+Python dasturlash tilining Kivy freymvorkida qaysi qurilmalar uchun dastur yozish mumkin?
+====
+#Barcha javoblar to‘g‘ri
+====
+Kompyuterlar
+====
+Mobil telefonlar
+====
+Planshetlar
+
+
++++++
+
+
+APK formati qanday turdagi fayllarni saqlaydi?
+====
+#Android dasturning build qilingan holati
+====
+Dart tilida yozilgan dastur kodi
+====
+Java tilida yozilgan dastur kodi
+====
+Android OS ning kutubxonasi
+
+
++++++
+
+
+Mobil dasturlashda Android ilovalar uchun asosan qaysi dizayn kutubxonasi ishlatiladi?
+====
+#Material
+====
+Cupertino
+====
+Arduino
+====
+Bootstrap
+
+
++++++
+
+
+Android Studioda quyidagi qaysi platformalar uchun dasturlar yozish mumkin?
+====
+#Android va iOS, iOS uchun Flutter plaginini o‘rnatib yozish mumkin
+====
+Faqat Android
+====
+Faqat iOS
+====
+Symbian
+
+
++++++
+
+
+Android Studioda iOS uchun ham dastur yozishga qanday talablar mavjud?
+====
+#Flutter plaginini o‘rnatish kerak
+====
+Maxsus emulyator kerak bo‘ladi
+====
+Web interpretator o‘rnatish kerak
+====
+React JS generatorini ulash kerak
+
+
++++++
+
+
+Image (Imageview) komponentasi qay maqsadda ishlatiladi?
+====
+#Rasmlarni joylashtirish uchun
+====
+Ma’lumotlarni jadval ko‘rinishida chop etish uchun
+====
+Audioma’lumotlarni joylashtirish uchun
+====
+Matnli ma’lumotlarni joylashtirish uchun
+
+
+
++++++
+
+
+
+Mobil ilovadagi element ustiga sichqoncha chap tugmasi bilan bosilganda qaysi metod ishga tushadi?
+====
+#OnPressed()
+====
+OnChanged()
+====
+OnFocused()
+====
+OnResume()
+
+
++++++
+
+
+Android dasturlari qaysi kengaytma bilan saqlanadi?
+====
+#.apk
+====
+.cpp
+====
+.txt
+====
+.exe
+
+
++++++
+
+
+Sana bilan ishlovchi komponenta (Android Studio, Flutter) qanday nomlanadi?
+====
+#DatePicker
+====
+Button
+====
+Checkbox
+====
+Radio
+
+
++++++
+
+
+Flutter freymvorki qaysi kompaniya tomonidan qo‘llab quvvatlanadi?
+====
+#Google
+====
+Facebook
+====
+Apple
+====
+Yandex
+
+
++++++
+
+
+Label vazifasini bajaruvchi komponentalar nomlari berilgan qatorni ko‘rsating?
+====
+#Text, TextView
+====
+Button, Checkbox
+====
+Radio, Grid
+====
+Table, DataTable
+
+
++++++
+
+
+Mobil ilova (masalan, birorta .apk kengaytmali fayl) ni kompyuterda ishlatish imkonini beruvchi dasturlar qanday nomlanadi?
+====
+#Emulyator
+====
+Kompilyator
+====
+Translator
+====
+Editor
+
+
++++++
+
+
+Android Studioda mavjud faylni ochish uchun qaysi buyruqdan foydalaniladi?
+====
+#Open (Ctrl + O)
+====
+Run (Shift + F10)
+====
+Debug (Shift + F9)
+====
+Save (Ctrl + S)
+
+
++++++
+
+
+Dart tilining mobil dasturlash uchun mo‘ljallangan freymvorkini belgilang?
+====
+#Flutter
+====
+Spring
+====
+Django
+====
+Symphony
+
+
++++++
+
+
+Quyidagilardan qaysi biri mobil dasturlash freymvorki hisoblanadi?
+====
+#Barcha javoblar to‘g‘ri
+====
+Python Kivy
+====
+React Native
+====
+Dart Flutter
+
+
++++++
+
+
+iOS uchun yozilgan kodni qanday qurilmada build qilish mumkin?
+====
+#Faqatgina MacOS o‘rnatilgan qurilmada
+====
+Istalgan Linux o‘rnatilgan kompyuterda
+====
+Windows 10 o‘rnatilgan kompyuterda
+====
+Istalgan OT o‘rnatilgan qurilmada
+
+
++++++
+
+
+Kodning dasturchi uchun tushunarli holatda, probel va tabulyatsiya belgilari bilan yozilgan holati qanday nomlanadi?
+====
+#Human readable
+====
+Minified
+====
+Yuqoridagilarni har ikkisi
+====
+Kod bunday holatda yozilmaydi
+
+
++++++
+
+
+Android Studioda kodni “Human readable” ko‘rinishga o‘tkazish uchun qaysi klavishlar birgalikda bosiladi?
+====
+#Ctrl + Alt + L
+====
+Ctrl + Shift + O
+====
+Ctrl + Alt + N
+====
+Ctrl + Shift + N
+
+
++++++
+
+
+Quyidagilardan qaysi dasturlash tilida mobil dasturlash uchun freymvork mavjud emas?
+====
+#PHP
+====
+Python
+====
+Dart
+====
+Javascript
+
+
++++++
+
+
+Qaysi mobil operatsion tizimda ishlaydigan qurilmalar eng ko‘p tarqalgan?
+====
+#Android
+====
+iOS
+====
+WebOS
+====
+BlackBerry OS
+
+
++++++
+
+
+Android operatsion tizimining keng tarqalishining asosiy sababini belgilang?
+====
+#Open source va tekin tarqatilishi
+====
+Havfsizligi eng kuchliligi
+====
+Kodning open source ligi
+====
+Foydalanish tekinligi
+
++++++
+
+
+Android haqida to‘g‘ri ta’rif berilgan qatorni belgilang?
+====
+#Barcha javoblar to‘g‘ri
+====
+Linux asosida yaratilgan
+====
+Open source
+====
+Foydalanish tekin
+
+
++++++
+
+
+Android Studioda Flutter bilan ishlaganda Dart dasturlash tiliga doir maxsus sozlamalar qaysi katalogda saqlanadi?
+====
+#.dart
+====
+android 
+====
+ios
+====
+lib
+
+
+
++++++
+
+
+Android Studioda qilinayotgan mobil ilova loyihasida Git sozlamalari qaysi faylda saqlanadi?
+====
+#.gitignore
+====
+.packages
+====
+.metadata
+====
+android
+
+
++++++
+
+
+Android Studioda Flutter freymvorkida qilinayotgan mobil ilova loyihasida .metada faylida qanday ma’lumotlar saqlanadi?
+====
+#Flutter yangilanishiga oid metama’lumotlar
+====
+iOS ga oid kodlar
+====
+Android maxsus (native) kodlari
+====
+Kutubxona sozlamalari
+
+
++++++
+
+
+Dastlab Andriod OT versiyalari qanday nomlangan?
+====
+#Shirinliklar nomlari bilan
+====
+Sayyoralar nomlari bilan
+====
+Qizlar ismlari bilan
+====
+Rok yulduzlari nomlari bilan
+
+
++++++
+
+
+Android Studioda qilinayotgan mobil ilova loyihasida .gitignore faylida qanday ma’lumotlar saqlanadi?
+====
+#Git bilan ishlash sozlamalari
+====
+iOS ga oid kodlar
+====
+Flutter yangilanishiga oid metama’lumotlar
+====
+Android maxsus (native) kodlari
+
+
++++++
+
+
+Android Studioda qilinayotgan mobil ilova loyihasida kerakli paketlar haqidagi ma’lumotlar qaysi faylda saqlanadi?
+====
+#packages 
+====
+metadata
+====
+gitignore
+====
+android
+
++++++
+
+Android qaysi sabablarga ko‘ra Linuxga asoslanib yaratilgan?
+====
+#Barcha javoblar to‘g‘ri
+====
+Xavfsizlik
+====
+Portativlik
+====
+Tarmoqlilik
+
++++++
+
+Android Studioda qilinayotgan mobil ilova loyihasida iOS katalogida qanday ma’lumotlar saqlanadi?
+====
+#iOS ga oid kodlar
+====
+Flutter yangilanishiga oid metama’lumotlar
+====
+Android maxsus (native) kodlari
+====
+Kutubxona sozlamalari
+
++++++
+
+Android Studioda qilinayotgan mobil ilova loyihasida .packages faylida qanday ma’lumotlar saqlanadi?
+====
+#Paketlar haqida qo‘shimcha ma’lumotlar
+====
+iOS ga oid kodlar
+====
+Flutter yangilanishiga oid metama’lumotlar
+====
+Kutubxona sozlamalari
+
++++++
+
+Android Studioda iOS spetsifikatsiyasiga doir maxsus sozlamalar qaysi katalogda saqlanadi?
+====
+#Ios 
+====
+Android 
+====
+Lib
+====
+Test
+
++++++
+
+Samarali mobil ilova ishlab chiqish uchun qaysi savollarga to‘g‘ri javob berish kerak?
+====
+#Barcha javoblar to‘g‘ri
+====
+Bu ilovadan kimlar foydalanadi
+====
+Ilovaning o‘ziga hosligi nimada
+====
+Ilovadan foydalanuvchiga nima foyda
+
++++++
+
+Android Studioda qilinayotgan mobil ilova loyihasida android katalogida qanday ma’lumotlar saqlanadi?
+====
+#Android maxsus (native) kodlari
+====
+iOS ga oid kodlar
+====
+Flutter yangilanishiga oid metama’lumotlar
+====
+Kutubxona sozlamalari
+
++++++
+
+Android Studioda Flutterda dasturlash uchun qanday talablar mavjud?
+====
+#Barcha javoblar to‘g‘ri
+====
+Flutter freymvorkining plaginini o‘rnatish
+====
+Dart dasturlash tilining plaginini o‘rnatish
+====
+Flutter SDK ni o‘rnatish va Pathni sozlash
+
++++++
+
+Android OT qaysi kompaniya tomonidan yaratilgan?
+====
+#Android Ins
+====
+Samsung
+====
+Apple
+====
+Microsoft
+
++++++
+
+Android Studioda dastur kodini kompilyatsiya qilib, to‘g‘ridan to‘g‘ri telefonga o‘rnatish mumkinmi?
+====
+#Mumkin, USB interfeys va ba’zi sozlamalar bilan
+====
+Mumkin emas
+====
+Mumkin, WiFi yoki Bluetooth orqali
+====
+To‘g‘ri javob yo‘q
+
++++++
+
+Android Studioda qilinayotgan mobil ilova loyihasida .idea katalogida qanday ma’lumotlar saqlanadi?
+====
+#Muharrir dasturi (editor) sozlamalari
+====
+iOS ga oid kodlar
+====
+Flutter yangilanishiga oid metama’lumotlar
+====
+Android maxsus (native) kodlari
+
++++++
+
+Mobil ilova yaratishda konsepsiyani ishlab chiqish qaysi jarayonlarni o‘z ichiga oladi?
+====
+#Barcha javoblar to‘g‘ri
+====
+Potensial mijozlarning ehtiyojlarini tahlil qilish
+====
+Interfeysning interaktiv prototiplarini ishlab chiqish
+====
+Texnik topshiriqni ishlab chiqish
+
++++++
+
+Javascript dasturlash tilining mobil dasturlashga mo‘ljallangan freymvorkini belgilang?
+====
+#React Native
+====
+React JS
+====
+Node JS
+====
+Angular JS
+
++++++
+
+Bir nechta platformalar uchun birdaniga dastur yozish imkoniga ega dasturlash tillari … dasturlash tillari deyiladi.
+====
+#Krossplatformali
+====
+obyektga yo‘naltirilgan
+====
+interpretatsiya qilinadigan
+====
+Protsedurali
+
++++++
+
+Faqat emulyator dasturlar berilgan qatorni toping?
+====
+#BlueStacks, Genymotion
+====
+Genymotion, Adobe Photoshop
+====
+Android Studio, Figma
+====
+Visual Studio, Arduino
+
++++++
+
+Mobil dasturlashda faqatgina matn ko‘rinishidagi ma'lumotlarni ko‘rsatish uchun ishlatiladi va <........> elementi yordamida yaratiladi
+====
+#TextView
+====
+ListView
+====
+GridView
+====
+DataTable
+
++++++
+
+CheckBox komponentasiga to‘g‘ri ta’rif berilgan qatorni belgilang
+====
+#bu maxsus turdagi tugma va ikkita holatda bo‘lishi mumkin: checked yoki unchecked.
+====
+tugmachaga o‘xshash vidjet bo‘lib, unda rasm tugma sifatida ishlatilishi
+====
+Sahifaga rasm qo‘yish uchun ishlatiladi
+====
+tugmachadir va bu tugma bosilganda ma'lum bir operatsiya amalga oshiriladi.
+
++++++
+
+Android Studioda virtual qurilmalar (telefon, planshet, …) ni yaratish, boshqarish imkonini beruvchi utilita qaysi?
+====
+#AVD manager
+====
+SDK manager
+====
+Resource manager
+====
+Project manager
+
++++++
+
+Android Studioda sozlamalarga tezkor kirish uchun qaysi tugmachalar birgalikda bosiladi?
+====
+#Ctrl + Alt + S
+====
+Ctrl + Alt + Del
+====
+Alt + F4
+====
+Ctrl + F1
+
++++++
+
+Mobil ilovalar dizaynini ishlab chiqishda UI tushunchasi nimani ifodalaydi?
+====
+#Foydalanuvchi interfeysi
+====
+Foydalanuvchi tajribasi
+====
+Mijoz talablari
+====
+Texnik topshiriq
+
++++++
+
+Ma’lumotlarni jadval ko‘rinishida aks ettirish uchun qaysi komponenta ishlatiladi?
+====
+#Table, DataTable
+====
+Text, TextView
+====
+Radio, RadioButton
+====
+ListView
+
++++++
+
+Sinf yaratish qaysi kalit so‘z yordamida amalga oshiriladi?
+====
+#class
+====
+function
+====
+extend
+====
+Debug
+
++++++
+
+Button ustiga sichqoncha bilan bosilganda qaysi metod ishga tushadi?
+====
+#onPress (Pressed)
+====
+onCheck (Checked)
+====
+onChange(Changed)
+====
+Bunday metod mavjud emas
+
++++++
+
+CheckBox belgilanganda qaysi atribut True qiymatga ega bo‘ladi?
+====
+#Checked
+====
+onpress
+====
+clicked
+====
+style
+
++++++
+
+Ob'ektning qiymati qaysi atribut orqali o‘rnatiladi?
+====
+#Value
+====
+Key
+====
+Caption
+====
+Id
+
++++++
+
+Mavjud variantlardan faqat bittasini belgilash uchun ishlatiladigan komponenta qaysi?
+====
+#Radio/RadioButton
+====
+Text/TextView
+====
+Grid/GridView
+====
+Table/DataTable
+
++++++
+
+Android Studioda tayyor bo‘lgan faylni saqlash uchun qaysi buyruq bosiladi?
+====
+#Save (Ctrl + S)
+====
+Open (Ctrl + O)
+====
+Debug (Shift + F9)
+====
+Run (Shift + F10)
+
++++++
+
+Android Studioda qilinayotgan mobil ilova loyihasida test katalogida qanday ma’lumotlar saqlanadi?
+====
+#dasturni testlashga doir kodlar
+====
+iOS ga oid kodlar
+====
+Flutter yangilanishiga oid metama’lumotlar
+====
+Kutubxona sozlamalari
+
++++++
+
+Android Studiodagi Android Virtual Device qanday vazifani bajaradi?
+====
+#Emulyator yoki telefonsiz dasturni ishlatib ko‘rish imkoniyatini beradi
+====
+Yozilgan dasturni sintaktik tahlil qiladi
+====
+Github bilan sinxronizatsiyani ta’minlaydi
+====
+To‘g‘ri javob yo‘q
+
++++++
+
+Android Studioda sozlamalarga tezkor kirish uchun qaysi klavishlar birgalikda bosiladi?
+====
+#Ctrl + Alt + S
+====
+Ctrl + Shift + O
+====
+Ctrl + Alt + N
+====
+Ctrl + Shift + N
+
++++++
+
+Android Studioda android spetsifikatsiyasiga doir maxsus sozlamalar qaysi katalogda saqlanadi?
+====
+#Android
+====
+Ios
+====
+Lib
+====
+Test
+
++++++
+
+“Hot reload” funksiyasi qanday vazifani bajaradi?
+====
+#Ishlab turgan dasturga o‘zgarishlarni tezkor qo‘shish
+====
+Dasturni xatoliklarga tekshirish
+====
+Yangi class yaratish
+====
+Android Studio dasturini yopish
+
++++++
+
+SQLite haqida quyidagilardan qaysi biri to‘g‘ri?
+====
+#Ma’lumotlar bazasini boshqarish tizimi
+====
+Virtual server
+====
+Android Studioning maxsus kutubxonasi
+====
+Freymvork
+
++++++
+
+Android Studioda muharrir (editor) maxsus sozlamalari qaysi katalogda saqlanadi?
+====
+#.idea
+====
+Ios 
+====
+Android 
+====
+test
+
++++++
+
+Quyidagilardan qaysi biri Android platformasi uchun dastur yozish imkoni mavjud emas?
+====
+#Sublime Text 3
+====
+Android Studio
+====
+VSCode
+====
+Intellij Idea
+
++++++
+
+Vaqt bilan ishlash uchun Android Studioda qaysi komonenta ishlatiladi?
+====
+#TimePicker
+====
+RadioButton
+====
+TextView
+====
+CheckBox
+
++++++
+
+Asosan tugmachali telefonlarda ishlatilgan mobil OT ni belgilang?
+====
+#Symbian 
+====
+Raspbian
+====
+Debian
+====
+XP
+
++++++
+
+Windows OT ga quyidagi dasturlardan qaysi birini o‘rnatib, .apk kengaytmali dasturni ishlatish mumkin?
+====
+#Genymotion 
+====
+Total Commander
+====
+Github Desktop
+====
+Istalgan brauzer
+
++++++
+
+Android Studioda kerakli kutubxona va modullar qaysi komanda bilan chaqiriladi?
+====
+#import
+====
+extends
+====
+run
+====
+class
+
++++++
+
+Butun sonli ma’lumotlar qaysi tipda e’lon qilinadi?
+====
+#int (integer)
+====
+char
+====
+float(double)
+====
+string
+
++++++
+
+Joriy elementga murojaat qilish uchun qaysi kalit so‘z ishlatiladi?
+====
+#this 
+====
+return
+====
+void
+====
+private
+
++++++
+
+GUI nima?
+====
+#Foydalanuvchi grafik interfeysi
+====
+Dasturlash uchun kerakli modullar
+====
+Freymvork 
+====
+Yuqoridagilardan hech qaysi biri
+
++++++
+
+Haqiqiy sonlar qaysi kalit so‘z bilan e’lon qilinadi?
+====
+#float
+====
+int
+====
+char
+====
+string
+
++++++
+
+Funksiyadagi return buyrug‘i qanday vazifani bajaradi?
+====
+#o‘zidan keyin keluvchi ma’lumot (son, satr, …) ni funksiya chaqirilgan joyga qaytaradi (uzatadi)
+====
+Boshqa sinfdan voris oladi
+====
+Kerakli modullarni ulaydi
+====
+To‘g‘ri javob berilmagan
+
++++++
+
+Android Studioda qilinayotgan mobil ilova loyihasida Flutterni yangilashga doir metama’lumotlar qaysi faylda saqlanadi?
+====
+#. metadata 
+====
+.packages
+====
+. gitignore
+====
+android
+
++++++
+
+Ilk telefon qurilmasiga kim patent olgan?
+====
+#Aleksandr Bell
+====
+Tomas Edison
+====
+Nikola Tesla
+====
+Fon Neyman
+
++++++
+
+Android dasturni WINDOWS OT da ishlatish mumkinmi?
+====
+#Mumkin, emulyatorlar kerak bo‘ladi
+====
+Buning iloji yo‘q
+====
+Mumkin, brauzer yordamida
+====
+Mumkin, videokodeklar kerak bo‘ladi
+
++++++
+
+iOS OT haqida to‘g‘ri ta’rif berilgan javobni belgilang?
+====
+#Barcha javoblar to‘g‘ri 
+====
+Xavfsizlikning yuqori darajasi
+====
+Betakror dizayn, qulay interfeys
+====
+Sifat va barqarorlik
+
++++++
+
+Android OT quyidagi imkoniyatlarning qaysi birini qo‘llab-quvvatlaydi?
+====
+#Ko‘p vazifalilik
+====
+Bluetooth
+====
+Video qo‘ng‘iroq
+====
+Barcha javoblar to‘g‘ri
+
++++++
+
+WINDOWS OT asosida yaratilgan mobil OT ni belgilang?
+====
+#Windows Phone 
+====
+Windows 11
+====
+Windows Vista
+====
+Windows XP
+
++++++
+
+Apple mobil qurilmalari uchun ilovalar do‘koni qanday nomlanadi?
+====
+#App Store
+====
+Play Market
+====
+Github
+====
+Android Market
+
++++++
+
+Quyidagilardan GUI elementlarini belgilang?
+====
+#Barcha javoblar to‘g‘ri
+====
+Button, CheckBox
+====
+Image, RadioButton
+====
+Text, Slider
+
++++++
+
+SDK Manager bu …
+====
+#SDK versiyalarini boshqarish utilitasi 
+====
+Virtual qurilmalarni boshqarish utilitasi
+====
+Kodni tahlil qilish
+====
+Loyiha modullarini boshqarish utilitas
+
++++++
+
+Satrli o‘zgaruvchilar qaysi tipda e’lon qilinadi?
+====
+#string
+====
+bool
+====
+int
+====
+float
+
++++++
+
+Android Studioda kompilyatsiya qilinib, ishlayotgan dasturga kiritilgan o‘zgarishlarni tezkor qo‘llash imkonini beruvchi komanda qaysi?
+====
+#Hot reload
+====
+Run
+====
+Close
+====
+Create
+
++++++
+
+Quyidagi muharrirlardan qaysi birida Android platformasi uchun dastur yozish mumkin?
+====
+#Barcha javoblar to‘g‘ri 
+====
+Intellij Idea
+====
+VS Code
+====
+Android Studio
+
++++++
+
+Android mobil qurilmalari uchun Googlening ilovalar do‘koni qanday nomlanadi?
+====
+#Play Market 
+====
+Amazon
+====
+Github
+====
+App Store
+
++++++
+
+Zamonaviy smartfonlar quyidagi qaysi funksiyalarga ega?
+====
+#Barcha javoblar to‘g‘ri 
+====
+Wi-Fi, Bluetooth
+====
+GPS, Voice Call
+====
+Touch Screen, Media Player
+
++++++
+
+Android Virtual Device (AVD) ni ishga tushirish uchun talablar qanday?
+====
+SDK vositalari 26.1.1 yoki undan keyingi versiyalari. 64 bitli protsessor. Windows: UG (Cheksiz mehmon) qo‘llab-quvvatlaydigan protsessor. HAXM 6.2.1 yoki undan keyingi versiyasi.
+====
+32-bitli protsessor. SDK va Windows 10 o‘rnatilgan bo‘lishi kerak.
+====
+32-bitli protsessor. SDK o‘rnatilgan bo‘lishi kerak.
+====
+SDK va Windows 7 o‘rnatilgan bo‘lishi kerak.
+
++++++
+
+Android telefonlarga Play Market ilovalar magazinidan boshqa joydan ham dastur o‘rnatsa bo‘ladimi?
+====
+#Ha, shunga ruxsat beruvchi sozlamani yoqish kerak
+====
+Buning imkon yo‘q
+====
+Ha, faqat oldindan Google Service ni ogohlantirish kerak
+====
+To‘g‘ri javob yo‘q
+
++++++
+
+Android Studioda kodlarimiz qatorlari orasidagi masofani sozlash ketma-ketligi qanday?
+====
+#File » Settings » Editor » Font » Size 
+====
+File » Settings
+====
+File » Settings » Editor » Font » Line spacing
+====
+File » New » Import Project
+
++++++
+
+Android Studioda yaratilgan loyihani yana qaysi muharrirlarda o‘zgartirish va ishlatish mumkin?
+====
+#Android Studio, IntelliJ IDEA, Eclipse 
+====
+Android Studio, Sublime
+====
+Android Studio, VSCode
+====
+Android Studio, Sublime, Notepad
+
++++++
+
+Android Studio-da ishlatiladigan asosiy o‘lchov birligi nima?
+====
+#dp 
+====
+sm
+====
+mm
+====
+km
+
++++++
+
+BlueStacks dasturidan qay maqsadda foydalanamiz?
+====
+#Emulyator 
+====
+Grafik muharrir
+====
+Media Player
+====
+Brauzer
+
++++++
+
+Katta kichik harflarga sezuvchanlik hususiyati qanday nomlanadi?
+====
+#Case sensitive
+====
+Page case
+====
+Code folding
+====
+Crossplatform
+
++++++
+
+Android Studioda fayl ichidan qidiruvni amalga oshirish uchun qaysi klavishlar ketma-ketligi bosiladi?
+====
+#Ctrl + F
+====
+Ctrl + S
+====
+Ctrl + O
+====
+Ctrl + R
+
++++++
+
+ToggleButton sinfining eng ko‘p ishlatiladigan usullari qanday?
+====
+#Barcha javoblar to‘g‘ri
+====
+bekor setChecked (mantiqiy tekshirilgan)
+====
+CharSequence getTextOff ()
+====
+CharSequence getTextOn (),
+
++++++
+
+Android CheckBox klassi qaysi sinfning subclassi?
+====
+#CompoundButton 
+====
+Beam
+====
+AppCompatActivity
+====
+RadioGroup
+
++++++
+
+Android Studioda qanday maxsulotlar yaratish mumkin?
+====
+#Barcha javoblar to‘g‘ri 
+====
+Mobil telefonlar uchun dasturlar
+====
+Planshetlar uchun dasturlar
+====
+Android televizorlar uchun dasturlar
+
++++++
+
+CheckBox nima?
+====
+#bu maxsus turdagi button va ikkita holatda bo‘lishi mumkin: tekshirilgan yoki belgilanmagan.
+====
+tugmachaga o‘xshash vidjet bo‘lib, unda rasm tugma sifatida ishlatilishi mumkin
+====
+tekshirilgan / tekshirilmagan ko‘rsatkich turi
+====
+tugmachadir va bu tugma bosilganda ma'lum bir operatsiya amalga oshiriladi.
+
++++++
+
+"Ochiq telefon" linyasi qachon tuzilgan?
+====
+#2007 yil
+====
+2005 yil
+====
+2006 yil
+====
+2008 yil
+
++++++
+
+RadioGroup qaysi tugmani o‘z ichiga oladi?
+====
+#RadioButton
+====
+Kommutator
+====
+ToogleButton
+====
+CheckBox
+
++++++
+
+Android Studioda qaysi tillarda dastur yozish mumkin?
+====
+#Barcha javoblar to‘g‘ri
+====
+Java
+====
+Dart
+====
+Kotlin
+
++++++
+
+Android Studioda muharrir uchun mavzu (rang sxemalari) ni sozlash ketma-ketligi qanday?
+====
+#File » Settings » Editor » Color Scheme
+====
+File » Settings » Editor » Font » Size
+====
+File » Settings » Editor » Font » Line spacing
+====
+File » New » Import Project
+
++++++
+
+Android-ning muhim xususiyatlari qanday?
+====
+#Barcha javoblar to‘g‘ri
+==== 
+Har kim Android platformasini sozlashi mumkin
+====
+Ochiq manba
+====
+Xabar xizmatlari (SMS va MMS), veb-brauzer, ma'lumotlarni saqlash (SQLite), ulanish (GSM, CDMA, Moviy tish, Wi-Fi va boshqalar), Multimedia va boshqalar.
+
++++++
+
+… tugma hisoblanib, uni bosish orqali muayyan amalni bajarishga dasturlash mumkin.
+====
+#Button
+====
+Radio
+====
+CheckBox
+====
+Text
+
++++++
+
+Matematik amallarni o‘z ichiga olgan kutubxona qanday nomlanadi?
+====
+#Math
+==== 
+Material
+====
+Cupertino
+====
+Main
+
++++++
+
+Android Studioda sozlamalarga kirish ketma-ketligi qanday?
+====
+#File » Settings
+==== 
+File » Open
+====
+File » New » New Project
+====
+File » New » Import Project
+
++++++
+
+Toast sinfining maqsadi nima?
+====
+#Ma'lum vaqtdan keyin xabarnomani ko‘rsatish uchun foydalaniladi.
+====
+menyu yaratish sifatida ishlatiladi
+====
+Xabarni saqlash uchun
+====
+Ma'lumotlar saralash uchun ishlatiladi
+
++++++
+
+Fon rangi qaysi atribut orqali o‘rnatiladi?
+====
+#android:background="#E3254B"
+====
+android:textcolor="#DC2020"
+====
+android:Color="# B15355"
+====
+android:id="#FF88FF"
+
++++++
+
+… buttonning maxsus turi hisoblanib, ikki hil holatda bo‘lishi mumkin: checked yoki unchecked.
+====
+#CheckBox 
+====
+Image
+====
+Radio
+====
+Text
+
++++++
+
+Quyidagi dialog oynalaridan qaysi biri Android tomonidan qo‘llab-quvvatlanadi?
+====
+#AlertDialog
+====
+ProgressDialog
+====
+DatePickerDialog
+====
+TimePickerDialog
+
++++++
+
+Qaysi MBBT avtomatik ravishda Android tomonidan taqdim etiladi?
+====
+#SQLite 
+====
+Apache
+====
+Oracle
+====
+MySQL
+
++++++
+
+TableLayout  - oynasi jadval qatorini hosil qilish uchun qaysi  elementdan foydalaniladi?
+====
+#TableRow
+====
+Image
+====
+Radio
+====
+Text
+
++++++
+
+Android Studioda kiritilgan matnni kursiv ko‘rinishiga o‘tkazish qaysi buyrug‘i to‘g‘ri kiritilgan qatorni belgilang?
+====
+#android:textStyle="italic "
+====
+android:textColor="#ffff"
+====
+android:text="black"
+====
+android:textStyle="bold "
+
++++++
+
+Obyekt gorizontal uzunligini (kengligini) sozlash uchun qaysi atributga murojaat qilinadi?
+====
+#width
+====
+height
+====
+title
+====
+caption
+
++++++
+
+Komponentaning tashqi chegarasida bo‘sh joy qoldirish uchun qaysi atributdan foydalaniladi?
+====
+#margin
+====
+context
+====
+background
+====
+padding
+
++++++
+
+Komponentaning ichki chegarasida bo‘sh joy qoldirish uchun qaysi atributdan foydalaniladi?
+====
+#padding
+====
+margin
+====
+context
+====
+background
+
++++++
+
+Obyekt nom berish uchun qaysi atributga murojaat qilinadi?
+====
+#text
+====
+width
+====
+height
+====
+color
+
++++++
+
+…– bu komponentalarni ma’lum o‘lchamlar va oraliqlar asosida joylashtirish imkoniyatini yaratadi.
+====
+#AbsoluteLayout
+====
+LinearLayout
+====
+FrameLayout
+====
+TableLayout
+
++++++
+
+… buttonga o‘xshash vidjet bo‘lib, rasmni tugma sifatida ishlatish mumkin.
+====
+#ImageButton
+==== 
+EditText
+====
+Radio
+====
+Text
+
++++++
+
+Android Studioda brauzerlarni integratsiya qilish ketma-ketligi qanday?
+====
+#File » Settings » Tools » Web Browsers
+====
+File » Settings » Editor » Font » Size
+====
+File » Editor
+====
+File » New » Import Project
+
++++++
+
+Android Virtual Device (AVD) ishga tushirish tartibini tanlang?
+====
+#AVD-ni ikki marta bosiladi yoki Start bosiladi; Ishlayotgan emulyatorni to‘xtatish uchun o‘ng tugma bosiladi va Stop yoki Menu » Stop ketma ketligi 
+====
+SDK menejeri ochiladi. Emulyator ishlayotgan biz Android Studio loyihasini ishga tushirish va ishlatish qurilmasi sifatida emulyatorni tanlash
+====
+APK faylini emulyatorga o‘rnatish uchun olib, keyin ishga tushirish mumkin.
+====
+Menyuni tanlanadi, Ma'lumotlarni o‘chirishga o‘tiladi va tugmani bosiladi.
+
++++++
+
+Android Studioda kod muharriridagi shriftni o‘zgartirish ketma-ketligi qanday?
+====
+#File » Settings » Editor » Font » Size
+==== 
+File » Settings
+====
+File » Editor
+====
+File » New » Import Project
+
++++++
+
+…- bu komponentalarni bitta qatorga (gorizontal) yoki ustun (vertikal)ga joylashtirish uchun ishlatiladi.
+====
+#LinearLayout
+====
+FrameLayout
+====
+AbsoluteLayout
+====
+TableLayout
+
+
++++++
+
+… - komponentalarning jadval asosida joylashuvidir.
+====
+#TableLayout
+====
+LinearLayout
+====
+FrameLayout
+====
+AbsoluteLayout
+
++++++
+
+Android Studioda mantiqiy ma’lumotlar qaysi tip orqali e’lon qilinadi?
+====
+#Boolean
+====
+int (integer)
+====
+float(double)
+====
+string
+
++++++
+
+Android Studioda yangi plagin o‘rnatish ketma-ketligi qanday?
+====
+#File » Settings »Plugins » Search & Install
+====
+File » Open
+====
+File » New » New Project
+====
+File » Close
+
++++++
+
+… - komponentalarning jadval asosida joylashuvidir.
+====
+#TableLayout
+====
+LinearLayout
+====
+FrameLayout
+====
+AbsoluteLayout
+
++++++
+
+Android Studioda CheckBox tugmasini aktiv holati to‘g‘ri keltirilgan qatorni belgilang?
+====
+#android:checked="true"
+====
+android: text="CheckBox"
+====
+android:textAlignment="center"
+====
+android:checked="false"
+
++++++
+
+Komponentaning ichki yuqori chegarasidan bo‘sh joy qoldirish uchun qaysi atributdan foydalaniladi?
+====
+#paddingTop
+====
+paddingBottom
+====
+paddingRight
+====
+paddingLeft
+
++++++
+
+Android Studioda yaratilgan ilovalni .apk formatga o‘tkazish ketma-ketligi qanday?
+====
+#Build » Build bundle » Build APK 
+====
+File » Open » Build APK
+====
+Build » New » Build APK
+====
+Build »  Import Project
+
++++++
+
+Komponentaning tashqi chap chegarasidan bo‘sh joy qoldirish uchun qaysi atributdan foydalaniladi?
+====
+#marginLeft 
+====
+marginBottom
+====
+marginRight
+====
+marginTop
+
++++++
+
+…- activity foydalanuvchi tomonidan ishlatilayotganda chaqiriladi.
+====
+#onResume()
+====
+onStop()
+====
+onDestroy()
+====
+onRestart()
+
++++++
+
+LinearLayout bu-…
+#komponentalarni bitta qatorga (gorizontal) yoki ustun (vertikal)ga joylashtirish uchun ishlatiladi.
+====
+komponentalarning jadval asosida joylashtiradi.
+====
+bu komponentalarni ma’lum o‘lchamlar va oraliqlar asosida joylashtirish imkoniyatini yaratadi.
+====
+Menyuni tanlanadi, Ma'lumotlarni o‘chirishga o‘tiladi va tugmani bosiladi.
+====
+
++++++
+
+…- activity foydalanuvchiga ko‘rinmay qolganida chaqiriladi
+====
+#onStop()
+====
+onDestroy()
+====
+onRestart()
+====
+onResume()
+
++++++
+
+Komponentaning tashqi o‘ng chegarasidan bo‘sh joy qoldirish uchun qaysi atributdan foydalaniladi?
+====
+#marginRight
+==== 
+marginBottom
+====
+marginLeft
+====
+marginTop
+
++++++
+
+Komponentaning ichki chap chegarasidan bo‘sh joy qoldirish uchun qaysi atributdan foydalaniladi?
+====
+#paddingLeft
+==== 
+paddingBottom
+====
+paddingRight
+====
+paddingTop
+
++++++
+
+Android Studioda kiritilgan matn qalinligini sozlash to‘g‘ri kiritilgan qatorni belgilang?
+====
+#android:textStyle="bold"
+====
+android:textColor="#ffff"
+====
+android:text="black"
+====
+android:textStyle="italic"
+
++++++
+
+DataPicker foydalanuvchiga quyidagilarni amalga oshirishga imkon beradi:
+====
+#Sanani belgilash
+====
+Vaqtni tanlash
+====
+Rasm ochish
+====
+Jadval yaratish
+
++++++
+
+Android Studioda ochiq turgan loyihani yopish ketma-ketligi qanday?
+====
+#File » Close
+==== 
+File » Open
+====
+File » New » New Project
+====
+File » New » Import Project
+
++++++
+
+…-TextView ning qo‘shimcha imkoniyatli turi hisoblanib, foydalanuvchi ushbu komponenta orqali ma’lumot kiritishi mumkin.
+====
+#EditText
+====
+Button
+====
+Checkbox
+====
+RadioButton
+
++++++
+
+Android Studioda matnga rang berish qaysi atribut orqali o‘rnatiladi?
+====
+android: textcolor
+====
+android: text
+====
+android:textStyle
+====
+android: id
+
++++++
+
+TimePickerDialog foydalanuvchiga quyidagilarni amalga oshirishga imkon beradi:
+====
+#Vaqtni tanlash
+====
+Sanani belgilash
+====
+Rasm ochish
+====
+Jadval yaratish
+
++++++
+
+Android Studioda mavjud loyihani ochish ketma-ketligi to‘g‘ri keltirilgan javobni belgilang?
+====
+#File » Open
+====
+File » New » New Project
+====
+File » Open recent » Project_name
+====
+File » New » Import Project
+
++++++
+
+Obyekt vertikal uzunligini sozlash uchun qaysi atributga murojaat qilinadi?
+====
+#height
+====
+width
+====
+title
+====
+caption
+
++++++
+
+Android ilovasida testlarni yaratish uchun qanday paket ishlatiladi?
+====
+#test 
+====
+matn
+====
+vidjet
+====
+ilova
+
++++++
+
+Funksiya o‘zi chaqirilgan moduldan qabul qilib oladigan qiymatlar nima deb ataladi?
+====
+#argument
+====
+class
+====
+protocol
+====
+method
+
++++++
+
+Android Studioda yangi loyiha yaratish ketma-ketligi to‘g‘ri keltirilgan javobni belgilang
+====
+#File » New » New Project
+====
+File » Open
+====
+File » Open recent » Project_name
+====
+File » New » Import Project
+
++++++
+
+MainActivity.java faylidagi "button" ga murojaat qilish uchun activity_main.xml dagi tugma uchun qanday funktsiya yozilgan?
+====
+#android: id = "@ + id / button"
+====
+android: layout_width = "wrap_content"
+====
+android: layout_below = "@ + id / editText"
+====
+android: text = "Tugma"
+
++++++
+
+Matn qalinligini sozlash uchun qaysi atributga qiymat beriladi?
+====
+#android:textStyle
+====
+android: text
+====
+android: textcolor
+====
+android: id
+
++++++
+
+Android Studioda boshqa dasturlash muharriri (IntellijIdea, VSCode, …) da yaratilgan loyihani import qilish ketma-ketligi to‘g‘ri keltirilgan javobni belgilang
+====
+#File » New » Import Project
+==== 
+File » Open
+====
+File » New » New Project
+====
+File » Open recent » Project_name
+
++++++
+
+Matnni o‘rtaga tekislash uchun textAlign atributiga qanday qiymat beriladi?
+====
+#center
+====
+left
+====
+right
+====
+bottom
+
++++++
+
+MainActivity.java faylidagi "TextView" ga matn kiritish uchun activity_main.xml dagi tugma uchun qanday funktsiya yozilgan?
+====
+#android: text = "Salom"
+====
+android: layout_width = "wrap_content"
+====
+android: layout_below = "@ + id / TextView "
+====
+android: id = "@ + id /Salom "
+
++++++
+
+CheckBox sinfining asosiy usullari qanday?
+====
+#public boolean isChecked (), public void setChecked (boolean status)
+====
+public string getText (), public void toString ()
+====
+public void makeText (), public void getApplicationContext ()
+====
+public void getBoxId (), public void show ()
+
++++++
+
+Android Studioda Button tugmasi bosilganda Buttonni ishga tushuvchi buyruq to‘g‘ri keltirilgan qatorni toping?
+====
+#android:onClick
+====
+android: text
+====
+android:textStyle
+====
+android: textcolor
+
++++++
+
+…-dastur birinchi marta ishga tushganda activity ni  chaqiradi.
+====
+#onCreate()
+====
+onStart()
+====
+onResume()
+====
+onPause()
+
++++++
+
+Android Studioda komponentaning ichki o‘ng chegarasidan bo‘sh joy qoldirish uchun qaysi atributdan foydalaniladi?
+====
+#android:paddingRight
+==== 
+android:paddingBottom
+====
+android:paddingLeft
+====
+android:paddingTop
+
++++++
+
+…- activity to‘xtatilgan vaqtda chaqiriladi.
+====
+#onDestroy()
+====
+onPause()
+====
+onRestart()
+====
+onStop()
+
++++++
+
+Komponentaning tashqi yuqori chegarasidan bo‘sh joy qoldirish uchun qaysi atributdan foydalaniladi?
+====
+#marginTop
+==== 
+marginBottom
+====
+marginRight
+====
+marginLeft
+
++++++
+
+…- activity natijasi foydalanuvchiga ko‘ringanda chaqiriladi.
+====
+#onStart()
+====
+onCreate()
+====
+onResume()
+====
+onPause()
+
++++++
+
+Android Studioda oxirgi bir nechta loyihalarni ochish ketma-ketligi to‘g‘ri keltirilgan javobni belgilang?
+====
+#File » Open recent
+==== 
+File » Open
+====
+File » New » New Project
+====
+File » New » Import Project
+
++++++
+
+…- joriy activity faoliyati vaqtinchalik to‘xtatilib boshqa activity faollashtirilganda chaqiriladi.
+====
+#onPause()
+====
+onStart()
+====
+onResume()
+====
+onCreate()
+
++++++
+
+Android Studioda kiritilgan matnni o‘lchamini o‘gartirish uchun qaysi atributdan foydalaniladi?
+====
+#android:textSize="25dp "
+====
+android:textColor="#ffff"
+====
+android:text="black"
+====
+android:textStyle="bold "
+
++++++
+
+Android Studioda ImageView komponentasiga rasm kiritish buyrug‘i to‘g‘ri kiritilgan qatorni belgilang?
+====
+#android:src="@drawable/circle"
+====
+android:id="@+id/imageView"
+====
+android:layout_width="wrap_content"
+====
+android:layout_height="wrap_content"
+
++++++
+
+Androidda Google Maps ximatidan foydalanish uchun qaysi kutubxonadan foydalaniladi?
+====
+#android.gms.maps.MapFragment
+====
+gooogle.android.Fragment
+====
+android.gms. AppFragment
+====
+androidx.appcompat. AppCompatActivity
+
++++++
+
+Android Studio dasturida asosan matnli ma’lumotlar bilan ishlovchi .xml fayli qaysi?
+====
+#strings.xml
+====
+colors.xml
+====
+button.xml
+====
+manifest.xml
+
++++++
+
+android:layout_below="@+id/imageView"  ushbu buyruq qanday amalni bajaradi?
+====
+#Kiritiladigan komponentalarni imageView komponentasidan keyin (pastki qismdan) joylashtiradi.
+====
+Kiritiladigan komponentalarni imageView komponentasiga rasm ko‘rinishida joylashtiradi.
+====
+imageView komponentasiga nom beradi.
+====
+Kiritiladigan komponentani imageView komponentasiga almashtiradi.
+
++++++
+
+Strings.xml fayliga ilova nomi to‘g‘ri kiritilgan qatorni toping?
+====
+#<string name="app_name">Laboratoriya_Ishi_1</string>
+====
+<string name="name">Laboratoriya_Ishi_1 />
+====
+<string name="app_name"Laboratoriya_Ishi_1/>
+====
+<string name=" Laboratoriya_Ishi_1 ">
+
++++++
+
+Android Studio da asosan java kodlari bilan ishlovchi fayli qaysi qatorda keltirilgan?
+====
+#MainActivity.java
+==== 
+Strings.java
+====
+AndroidButton.xml
+====
+AndroidManifest.xml
+
++++++
+
+Button tugmasini ekranning chap qismidan joylashtirish uchun qaysi atributdan foydalaniladi?
+====
+#android:layout_ alignLeft
+==== 
+android:layout_centerHorizontal
+====
+android:onClick
+====
+android:layout_ alignTop
+
++++++
+
+Android Studio dasturida matnga link orqali rang berish uchun qaysi atributdan foydalaniladi?
+====
+#android:textColorLink
+====
+android:textColor
+====
+android:layoutLink
+====
+android:text
+
++++++
+
+Android Studio dasturida asosan ranglari bilan ishlovchi .xml fayli qaysi?
+====
+#colors.xml
+==== 
+strings.xml
+====
+button.xml
+====
+manifest.xml
+
++++++
+
+LinearLayout ning qaysi atributi orqali komponentalarni bitta qatorga (gorizontal) yoki ustun (vertikal)ga joylashtirish mumkin?
+====
+#android:orientation
+====
+android:layout_width
+====
+android:layout_height
+====
+android:layout_alignParentTop
+====
+
++++++
+
+…- activity to‘xtatilgan vaqtda chaqiriladi.
+====
+#onRestart()
+====
+onStart()
+====
+onCreate()
+====
+onPause()
+
+`;
+
+function parseTests(text) {
+  return text.split('+++++')
+    .map(b => b.trim())
+    .filter(Boolean)
+    .map(block => {
+      const parts = block.split('====').map(p => p.trim());
+      return {
+        question: parts[0].toLowerCase(),
+        rawQuestion: parts[0],
+        answers: parts.slice(1).map(a => ({
+          text: a.replace(/^#/, ''),
+          correct: a.startsWith('#')
+        }))
+      };
+    });
+}
+
+const allTests = parseTests(testText);
+
+function findQuestions() {
+  const input = document.getElementById('searchQuestions').value
+    .toLowerCase()
+    .split('\n')
+    .map(q => q.trim())
+    .filter(Boolean);
+
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+
+  let found = 0;
+
+  allTests.forEach(test => {
+    if (input.some(q => test.question.includes(q))) {
+      found++;
+
+      const box = document.createElement('div');
+      box.className = 'test';
+
+      const qDiv = document.createElement('div');
+      qDiv.className = 'question';
+      qDiv.textContent = test.rawQuestion;
+      box.appendChild(qDiv);
+
+      test.answers.forEach(ans => {
+        const a = document.createElement('div');
+        a.className = 'answer';
+        a.textContent = ans.text;
+        if (ans.correct) a.classList.add('correct');
+        box.appendChild(a);
+      });
+
+      results.appendChild(box);
+    }
+  });
+
+  if (found === 0) {
+    results.innerHTML = "<p style='color:#dc3545;'>Mos savollar topilmadi</p>";
+  }
+}
+</script>
+
+</body>
+</html>
